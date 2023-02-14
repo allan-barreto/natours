@@ -41,7 +41,7 @@ exports.updateUser = catchErrorAsync(async (req, res, next) => {
   }
   res
     .status(200)
-    .json({ status: 'success', message: 'Cadastro atualizado', data: user });
+    .json({ status: 'success', message: 'User updated!', data: user });
 });
 
 exports.deleteUser = catchErrorAsync(async (req, res, next) => {

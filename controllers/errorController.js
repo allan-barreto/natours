@@ -1,4 +1,5 @@
-const AppError = require('./../utils/appError');
+/* eslint-disable node/no-unsupported-features/es-syntax */
+const AppError = require('../utils/appError');
 
 const handleCastErrorDB = (err) => {
   const message = `Invalid ${err.path}: ${err.value}.`;
@@ -15,6 +16,12 @@ const handleValidationErrorDB = (err) => {
   const message = `Invalid input data. ${errors.join('. ')}`;
   return new AppError(message, 400);
 };
+
+const handleJsonWebTokenError = () =>
+  new AppError('Authentication failed. Please login again', 401);
+
+const handleJWTExpirederror = () =>
+  new AppError('Token expired. Please login again', 401);
 
 const sendErrorDev = (err, res) => {
   res.status(err.statusCode).json({
@@ -61,6 +68,10 @@ module.exports = (err, req, res, next) => {
     if (error.code === 11000) error = handleDuplicateFieldsDB(error);
     if (error.name === 'ValidationError')
       error = handleValidationErrorDB(error);
+    if (error.name === 'JsonWebTokenError')
+      error = handleJsonWebTokenError(error);
+    if (error.name === 'tokenExpiredError')
+      error = handleJWTExpirederror(error);
 
     sendErrorProd(error, res);
   }

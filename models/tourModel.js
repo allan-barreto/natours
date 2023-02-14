@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const slugify = require('slugify');
+// eslint-disable-next-line no-unused-vars
 const validator = require('validator');
 
 const tourSchema = new mongoose.Schema(
@@ -69,7 +70,8 @@ tourSchema.virtual('durationWeeks').get(function () {
 
 //document middleware - runs before .save() and .create()
 tourSchema.pre('save', function (next) {
-  (this.slug = slugify(this.name, { lower: true })), next();
+  this.slug = slugify(this.name, { lower: true });
+  next();
 });
 
 //query middleware -runs before .find()
@@ -78,15 +80,15 @@ tourSchema.pre(/^find/, function (next) {
   next();
 });
 
-tourSchema.post(/^find/, function (docs, next) {
-  console.log(`Query took ${Date.now() - this.start} milliseconds!`);
-  next();
-});
+// tourSchema.post(/^find/, function (docs, next) {
+//   console.log(`Query took ${Date.now() - this.start} milliseconds!`);
+//   next();
+// });
 
 //aggregation middleware - runs before.aggregate()
 tourSchema.pre('aggregate', function (next) {
   this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
-  console.log(this), next();
+  next();
 });
 
 const Tour = mongoose.model('Tour', tourSchema);

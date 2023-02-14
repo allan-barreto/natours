@@ -48,7 +48,7 @@ exports.updateTour = catchErrorAsync(async (req, res, next) => {
   }
   res
     .status(200)
-    .json({ status: 'success', message: 'Tour atualizada', data: tour });
+    .json({ status: 'success', message: 'Tour updated', data: tour });
 });
 
 exports.deleteTour = catchErrorAsync(async (req, res, next) => {

@@ -13,6 +13,7 @@ exports.signup = catchErrorAsync(async (req, res, next) => {
   const newUser = await User.create({
     name: req.body.name,
     email: req.body.email,
+    photo: req.body.photo,
     password: req.body.password,
     confirmPassword: req.body.confirmPassword,
   });
@@ -78,3 +79,34 @@ exports.protect = catchErrorAsync(async (req, res, next) => {
   req.user = currentUser;
   next();
 });
+
+exports.restrictTo =
+  (...roles) =>
+  (req, res, next) => {
+    //roles is an array[]
+    if (!roles.includes(req.user.role)) {
+      return next(
+        new AppError('You do not have permission to perform this action', 403)
+      );
+    }
+    next();
+  };
+
+exports.forgotPassword = catchErrorAsync(async (req, res, next) => {
+  // get user based on e-mail
+  const user = await User.findOne({ email: req.body.email });
+  if (!user) {
+    return next(
+      new AppError(
+        'The informed e-mail is not registered in our database.',
+        404
+      )
+    );
+  }
+
+  // generate the random reset token
+  const resetToken = user.createPasswordResetToken();
+  await user.save({ validateBeforeSave: false });
+  // send it to the user's e-mail
+});
+exports.resetPassword = (req, res, next) => {};

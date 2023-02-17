@@ -11,6 +11,21 @@ const signToken = (id) =>
     expiresIn: process.env.JWT_EXPIRES_IN,
   });
 
+const createSendToken = (user, statusCode, res) => {
+  const token = signToken(user._id);
+  const cookieOptions = {
+    expires: new Date(
+      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
+    ),
+    httpOnly: true,
+  };
+  if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
+  res.cookie('jwt', token, cookieOptions);
+  // remove password from output
+  user.password = undefined;
+  res.status(statusCode).json({ status: 'Success', token, data: { user } });
+};
+
 exports.signup = catchErrorAsync(async (req, res, next) => {
   const newUser = await User.create({
     name: req.body.name,
@@ -19,10 +34,7 @@ exports.signup = catchErrorAsync(async (req, res, next) => {
     password: req.body.password,
     confirmPassword: req.body.confirmPassword,
   });
-
-  const token = signToken(newUser._id);
-
-  res.status(201).json({ status: 'Success', token, data: { user: newUser } });
+  createSendToken(newUser, 201, res);
 });
 
 exports.login = catchErrorAsync(async (req, res, next) => {
@@ -39,8 +51,7 @@ exports.login = catchErrorAsync(async (req, res, next) => {
     return next(new AppError('Incorrect e-mail or password', 401));
   }
   // 3- Send token for the client};
-  const token = signToken(user._id);
-  res.status(200).json({ status: 'success', token });
+  createSendToken(user, 200, res);
 });
 
 exports.protect = catchErrorAsync(async (req, res, next) => {
@@ -58,10 +69,8 @@ exports.protect = catchErrorAsync(async (req, res, next) => {
       new AppError('You are not logged. Please log to get access', 401)
     );
   }
-
   // 2) verification token
   const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
-
   // 3) Check if user still exists
   const currentUser = await User.findById(decoded.id);
   if (!currentUser) {
@@ -105,7 +114,6 @@ exports.forgotPassword = catchErrorAsync(async (req, res, next) => {
       )
     );
   }
-
   // generate the random reset token
   const resetToken = user.createPasswordResetToken();
   await user.save({ validateBeforeSave: false });
@@ -163,8 +171,23 @@ exports.resetPassword = catchErrorAsync(async (req, res, next) => {
   // 3 - Update passwordChangedAt propriety for the user
 
   // 4 - Log the user in, send JWT
-  const token = signToken(user._id);
-  res.status(200).json({ status: 'success', token });
+  createSendToken(user, 200, res);
 });
 
-exports.updatePassword = (req, res, next) => {};
+exports.updatePassword = catchErrorAsync(async (req, res, next) => {
+  // 1- get the user from collection
+  const user = await User.findById(req.user.id).select('+password');
+  // 2- Check if POSTed current password is correct
+  if (
+    !user ||
+    !(await user.correctPassword(req.body.currentPassword, user.password))
+  ) {
+    return next(new AppError('Incorrect e-mail or password', 401));
+  }
+  // 3 - If yes, change the password
+  user.password = req.body.password;
+  user.confirmPassword = req.body.confirmPassword;
+  await user.save();
+  // 4 - login the user in, send JWS
+  createSendToken(user, 200, res);
+});

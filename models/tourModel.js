@@ -59,6 +59,36 @@ const tourSchema = new mongoose.Schema(
     createdAt: { type: Date, defaut: Date.now(), select: false },
     startDates: [Date],
     secretTour: { type: Boolean, default: false },
+    startLocation: {
+      // GeoJSON
+      type: {
+        type: String,
+        default: 'Point',
+        enum: ['Point'],
+      },
+      coordinates: [Number],
+      address: String,
+      description: String,
+    },
+    locations: [
+      {
+        type: {
+          type: String,
+          default: 'Point',
+          enum: ['Point'],
+        },
+        coordinates: [Number],
+        address: String,
+        description: String,
+        day: Number,
+      },
+    ],
+    guides: [
+      {
+        type: mongoose.Schema.ObjectId,
+        ref: 'User',
+      },
+    ],
   },
   { toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
@@ -77,13 +107,22 @@ tourSchema.pre('save', function (next) {
 //query middleware -runs before .find()
 tourSchema.pre(/^find/, function (next) {
   this.find({ secretTour: { $ne: true } });
+  this.start = Date.now();
   next();
 });
 
-// tourSchema.post(/^find/, function (docs, next) {
-//   console.log(`Query took ${Date.now() - this.start} milliseconds!`);
-//   next();
-// });
+tourSchema.pre(/^find/, function (next) {
+  this.populate({
+    path: 'guides',
+    select: '-__v -passwordChangedAt',
+  });
+  next();
+});
+
+tourSchema.post(/^find/, function (docs, next) {
+  console.log(`Query took ${Date.now() - this.start} milliseconds!`);
+  next();
+});
 
 //aggregation middleware - runs before.aggregate()
 tourSchema.pre('aggregate', function (next) {

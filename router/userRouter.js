@@ -16,39 +16,25 @@ router.patch(
   authController.protect,
   authController.updatePassword
 );
-router.patch('/updateMe', authController.protect, userController.updateMe);
-router.delete('/deleteMe', authController.protect, userController.deleteMe);
 
-//ADMIN SESSION
+// Protect all the routes after this middleware
+router.use(authController.protect);
+
+router.get('/me', userController.getMe, userController.getUser);
+router.patch('/updateMe', userController.updateMe);
+router.delete('/deleteMe', userController.deleteMe);
+
+//ADMIN SESSION after this middleware
+router.use(authController.restrictTo('admin'));
 
 router
   .route('/')
-  .get(
-    authController.protect,
-    authController.restrictTo('admin'),
-    userController.getAllUsers
-  )
-  .post(
-    authController.protect,
-    authController.restrictTo('admin'),
-    userController.createUser
-  );
+  .get(userController.getAllUsers)
+  .post(userController.createUser);
 router
   .route('/:id')
-  .get(
-    authController.protect,
-    authController.restrictTo('admin'),
-    userController.getUser
-  )
-  .patch(
-    authController.protect,
-    authController.restrictTo('admin'),
-    userController.updateUser
-  )
-  .delete(
-    authController.protect,
-    authController.restrictTo('admin'),
-    userController.deleteUser
-  );
+  .get(userController.getUser)
+  .patch(userController.updateUser)
+  .delete(userController.deleteUser);
 
 module.exports = router;

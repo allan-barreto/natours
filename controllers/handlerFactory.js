@@ -24,12 +24,12 @@ exports.getAll = (Model) =>
 exports.getOne = (Model, populateOptions) =>
   catchErrorAsync(async (req, res, next) => {
     let query = Model.findById(req.params.id);
-    if (populateOptions) query.populate(populateOptions);
+    if (populateOptions) query = query.populate(populateOptions);
     const doc = await query;
     if (!doc) {
       return next(new AppError('Document not found', 404));
     }
-    res.status(200).json(doc);
+    res.status(200).json({ status: 'success', data: { data: doc } });
   });
 
 exports.createOne = (Model) =>

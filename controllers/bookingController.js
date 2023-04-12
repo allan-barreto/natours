@@ -1,9 +1,8 @@
-const catchErrorAsync = require('../utils/catcherrorasync');
-const factory = require('./handlerFactory');
 const Stripe = require('stripe');
 const Booking = require('../models/bookingModel');
 const Tour = require('../models/tourModel');
-const catcherrorasync = require('../utils/catcherrorasync');
+const catchErrorAsync = require('../utils/catcherrorasync');
+const factory = require('./handlerFactory');
 
 exports.getCheckoutSession = catchErrorAsync(async (req, res, next) => {
   // get the currently booked tour
@@ -38,7 +37,7 @@ exports.getCheckoutSession = catchErrorAsync(async (req, res, next) => {
   res.status(200).json({ status: 'success', session });
 });
 
-exports.createBookingCheckout = catcherrorasync(async (req, res, next) => {
+exports.createBookingCheckout = catchErrorAsync(async (req, res, next) => {
   const { tour, user, price } = req.query;
   if (!tour && !user && !price) return next();
   await Booking.create({ tour, user, price });

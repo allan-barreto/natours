@@ -1,9 +1,10 @@
+const multer = require('multer');
+const sharp = require('sharp');
+
 const User = require('../models/userModel');
 const AppError = require('../utils/appError');
-const sharp = require('sharp');
 const catchErrorAsync = require('../utils/catcherrorasync');
 const factory = require('./handlerFactory');
-const multer = require('multer');
 
 // // WITHOUT IMAGE PROCESSING (save without modifications)
 // const multerStorage = multer.diskStorage({

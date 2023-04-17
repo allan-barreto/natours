@@ -2,7 +2,7 @@
   "name": "natours",
   "version": "1.0.0",
   "description": "API built on node.js, express and mongoDB",
-  "main": "index.html",
+  "main": "index.js",
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
